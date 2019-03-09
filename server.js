@@ -1,9 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt-nodejs');
+const cors = require('cors');
 
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
 
 const PORT = 3000;
 
@@ -13,7 +16,7 @@ let database = {
          id: 3,
          name: 'Jimmy',
          email: 'jimmy@gmail.com',
-         password: 'gorbachev',
+         password: '',
          entries: 6,
          joined: new Date()
       },
@@ -24,6 +27,14 @@ let database = {
          password: 'jimmyfallon',
          entries: 9,
          joined: new Date()
+      }
+   ],
+
+   login: [
+      {
+         id: '3',
+         hash: '',
+         email: 'jimmy@gmail.com'
       }
    ]
 };
@@ -37,6 +48,7 @@ app.get('/', (req, res) => {
 app.post('/signin', (req, res) => {
    console.log(req.body.email);
    console.log(req.body.password);
+
    if (reqCredentialsAreValid(req)) {
       res.json('success');
    } else {
@@ -46,6 +58,10 @@ app.post('/signin', (req, res) => {
 
 app.post('/register', (req, res) => {
    const {email, name, password} = req.body;
+
+   bcrypt.hash(password, null, null, function(err, hash) {
+      console.log(hash);
+   });
 
    database.users.push({
       id: 2345,
@@ -94,8 +110,8 @@ const reqCredentialsAreValid = req => {
           req.body.password === database.users[i].password) {
              return true;
           }
-   return false;
    }
+   return false;
 }
 
 const foundUser = id => {
