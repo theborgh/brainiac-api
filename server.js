@@ -88,15 +88,16 @@ app.get('/profile/:id', (req, res) => {
 })
 
 app.put('/image', (req, res) => {
-   const {id} = req.body;
+   const {id, facesFound} = req.body;
 
    const user = database.users.filter(u => u.id === Number(id));
    console.log('put IMAGE: ', id, Number(id), user);
 
    if (user[0]) {
-      console.log('user.name = ', user[0].name, 'user.entries', user[0].entries);
-      user[0].entries++;
-      console.log('After update, user.entries', user[0].entries);
+      console.log('faces found: ', facesFound);
+      console.log('Before update, user.name = ', user[0].name, 'user.entries', user[0].entries);
+      user[0].entries += facesFound;
+      console.log('After update, user.name = ', user[0].name, 'user.entries', user[0].entries);
 
       res.json(user[0].entries);
    } else {
