@@ -16,12 +16,12 @@ let database = {
          id: 3,
          name: 'Jimmy',
          email: 'jimmy@gmail.com',
-         password: '',
+         password: 'gorbachev',
          entries: 6,
          joined: new Date()
       },
       {
-         id: 5,
+         id: 7,
          name: 'Geordie',
          email: 'geordie@gmail.com',
          password: 'jimmyfallon',
@@ -49,8 +49,11 @@ app.post('/signin', (req, res) => {
    console.log(req.body.email);
    console.log(req.body.password);
 
-   if (reqCredentialsAreValid(req)) {
-      res.json('success');
+   const userIndex = getUserIndex(req);
+
+   if (userIndex !== -1) {
+      console.log('returned user: ', database.users[userIndex])
+      res.json(database.users[userIndex]);
    } else {
       res.status(400).json('Credentials are invalid!');
    }
@@ -80,37 +83,39 @@ app.get('/profile/:id', (req, res) => {
    if (userIndex !== -1) {
       res.json(database.users[userIndex]);
    } else {
-      res.status(404).json('That user doesn\'t exist!');
+      res.status(404).json('Profile: That user doesn\'t exist!');
    }
 })
 
-app.post('/image', (req, res) => {
+app.put('/image', (req, res) => {
    const {id} = req.body;
 
    const user = database.users.filter(u => u.id === Number(id));
-   console.log(id, Number(id), user);
+   console.log('put IMAGE: ', id, Number(id), user);
 
-   if (user) {
-      console.log(user[0].name);
+   if (user[0]) {
+      console.log('user.name = ', user[0].name, 'user.entries', user[0].entries);
       user[0].entries++;
-      res.json(user);
+      console.log('After update, user.entries', user[0].entries);
+
+      res.json(user[0].entries);
    } else {
-      res.status(404).json('That user doesn\'t exist!');
+      res.status(404).json('That user doesn\'t exist! This should never happen'); // Should never happen, because user's alread logged in
    }
 })
 
 app.listen(PORT, () => {
-   console.log(`App is running on port ${PORT}`);
+   console.log(`Server is running on port ${PORT}`);
 });
 
-const reqCredentialsAreValid = req => {
+const getUserIndex = req => {
    for(let i = 0; i < database.users.length; i++) {
       if (req.body.email === database.users[i].email &&
           req.body.password === database.users[i].password) {
-             return true;
+             return i;
           }
    }
-   return false;
+   return -1;
 }
 
 const foundUser = id => {
