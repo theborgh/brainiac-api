@@ -126,21 +126,14 @@ app.get('/profile/:id', (req, res) => {
 app.put('/image', (req, res) => {
    const {id, facesFound} = req.body;
 
-   const user = database.users.filter(u => u.id === Number(id));
-   console.log('put IMAGE: ', id, Number(id), user);
-
-   if (user[0]) {
-      console.log('faces found: ', facesFound);
-      console.log('Before update, user.name = ', user[0].name, 'user.facecount', user[0].facecount);
-      user[0].facecount += facesFound;
-      console.log('After update, user.name = ', user[0].name, 'user.facecount', user[0].facecount);
-
-      res.json(user[0].facecount);
-   } else {
-      debugger;
-      res.status(404).json('That user doesn\'t exist! This should never happen, user is already logged in'); // Should never happen, because user's alread logged in
-   }
-})
+   db('users').where('id', '=', id)
+      .increment('facecount', facesFound)
+      .returning('facecount')
+      .then(count => {
+         res.json(count[0]);
+      })
+         .catch(err => res.status(400).json('Unable to get the facecount'))
+   });
 
 app.listen(PORT, () => {
    console.log(`Server is running on port ${PORT}`);
