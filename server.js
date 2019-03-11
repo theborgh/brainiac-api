@@ -104,13 +104,23 @@ app.post('/register', (req, res) => {
 
 app.get('/profile/:id', (req, res) => {
    const {id} = req.params;
-   const userIndex = foundUser(id);
 
-   if (userIndex !== -1) {
-      res.json(database.users[userIndex]);
-   } else {
-      res.status(404).json('Profile: That user doesn\'t exist!');
-   }
+   db.select('*').from('users')
+      .where({
+         id: id
+      })
+      .then(user => {
+         if(user.length) {
+            res.json(user[0]);
+         } else {
+            res.status(400).json("User not found")
+         }
+      })
+      .catch(err => {
+         res.status(400).json("Error fetching user");
+      });
+
+
 })
 
 app.put('/image', (req, res) => {
@@ -144,15 +154,4 @@ const getUserIndex = req => {
           }
    }
    return -1;
-}
-
-const foundUser = id => {
-   let i = -1;
-   database.users.forEach((user, index) => {
-
-      if(user.id === Number(id))
-         i = index;
-   });
-
-   return i;
 }
