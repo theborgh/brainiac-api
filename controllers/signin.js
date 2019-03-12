@@ -1,6 +1,10 @@
 const handleSignIn = (db, bcrypt) => (req, res) => {
    const {email, password} = req.body;
-   console.log(email, password);
+
+   if (email === '' || password === '') {
+      return res.status(400).json('Login fields cannot be blank');
+   }
+
    db.select('email', 'hash')
    .from('login')
    .where('email', '=', email)

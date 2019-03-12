@@ -2,6 +2,10 @@ const handleRegister = (db, bcrypt) => (req, res) => {
    const {email, name, password} = req.body;
    const hash = bcrypt.hashSync(password);
 
+   if (name === '' || email === '' || password === '') {
+      return res.status(400).json('Registration fields cannot be blank');
+   }
+
    db.transaction(trx => {
       trx.insert({
          hash: hash,
@@ -18,7 +22,6 @@ const handleRegister = (db, bcrypt) => (req, res) => {
             joined: new Date()
          })
          .then(user => {
-            console.log('user[0]: ', user[0]);
             res.json(user[0]);
          })
       })
@@ -26,7 +29,6 @@ const handleRegister = (db, bcrypt) => (req, res) => {
       .catch(trx.rollback)
    })
    .catch(err => {
-      console.log('error');
       res.status(400).json('Unable to register. Is the email unique?')
    });
 }
