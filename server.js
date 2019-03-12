@@ -21,85 +21,63 @@ app.use(cors());
 
 const PORT = 3000;
 
-let database = {
-   users: [
-      {
-         id: 3,
-         name: 'Jimmy',
-         email: 'jimmy@gmail.com',
-         password: 'gorbachev',
-         facecount: 6,
-         joined: new Date()
-      },
-      {
-         id: 7,
-         name: 'Geordie',
-         email: 'geordie@gmail.com',
-         password: 'jimmyfallon',
-         facecount: 9,
-         joined: new Date()
-      }
-   ],
-
-   login: [
-      {
-         id: '3',
-         hash: '',
-         email: 'jimmy@gmail.com'
-      }
-   ]
-};
-
-
 app.get('/', (req, res) => {
    
    res.send(database.users);
 });
 
 app.post('/signin', (req, res) => {
-   console.log(req.body.email);
-   console.log(req.body.password);
-
-   const userIndex = getUserIndex(req);
-
-   if (userIndex !== -1) {
-      console.log('returned user: ', database.users[userIndex])
-      res.json(database.users[userIndex]);
-   } else {
-      res.status(400).json('Credentials are invalid!');
-   }
+   const {email, password} = req.body;
+   console.log(email, password);
+   db.select('email', 'hash')
+   .from('login')
+   .where('email', '=', email)
+   .then(data => {
+      if (bcrypt.compareSync(password, data[0].hash)) {
+         return db.select('*').from('users')
+            .where('email', '=', email)
+            .then(user => {
+               res.json(user[0]);
+            })
+            .catch(err => res.status(400).json('Unable to get user'))
+      } else {
+         res.status(400).json('Wrong credentials!');
+      }
+   })
+   .catch(err => res.status(400).json('Wrong credentials'))
 });
 
 app.post('/register', (req, res) => {
    const {email, name, password} = req.body;
+   const hash = bcrypt.hashSync(password);
 
-   bcrypt.hash(password, null, null, function(err, hash) {
-      console.log(hash);
-   });
-
-   db('users')
-      .returning('*')
-      .insert({
-         email: email,
-         name: name,
-         joined: new Date()
+   db.transaction(trx => {
+      trx.insert({
+         hash: hash,
+         email: email
       })
+      .into('login')
+      .returning('email')
+      .then(loginEmail => {
+         return trx('users')
+         .returning('*')
+         .insert({
+            email: loginEmail[0],
+            name: name,
+            joined: new Date()
+         })
          .then(user => {
             console.log('user[0]: ', user[0]);
-            res.json(user);
+            res.json(user[0]);
          })
-         .catch(err => {
-            console.log('error');
-            res.status(400).json('Unable to register: is the email unique?')
-         });
-
-   database.users.push({
-      id: 2345,
-      name: name,
-      email: email,
-      facecount: 0,
-      joined: new Date()
+      })
+      .then(trx.commit)
+      .catch(trx.rollback)
    })
+   .catch(err => {
+      console.log('error');
+      res.status(400).json('Unable to register. Is the email unique?')
+   });
 });
 
 app.get('/profile/:id', (req, res) => {
@@ -119,8 +97,6 @@ app.get('/profile/:id', (req, res) => {
       .catch(err => {
          res.status(400).json("Error fetching user");
       });
-
-
 })
 
 app.put('/image', (req, res) => {
