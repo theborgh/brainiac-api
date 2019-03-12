@@ -23,7 +23,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
-const PORT = 3000;
+const PORT = process.env.PORT;
 
 app.get('/', (req, res) => {
    
@@ -36,6 +36,6 @@ app.get('/profile/:id', profile.handleProfile(db));
 app.put('/image', image.handleImage(db));
 app.post('/imageurl', (req, res) => image.handleAPICall(req, res));
 
-app.listen(PORT, () => {
+app.listen(PORT || 3000, () => {
    console.log(`Server is running on port ${PORT}`);
 });
