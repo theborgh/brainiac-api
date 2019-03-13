@@ -25,11 +25,7 @@ app.use(cors());
 
 const PORT = process.env.PORT;
 
-app.get('/', (req, res) => {
-   
-   res.send(database.users);
-});
-
+app.get('/', (req, res) => res.send('it is working')); //app.get('/', (req, res) => res.send(database.users));
 app.post('/signin', signin.handleSignIn(db, bcrypt));
 app.post('/register', register.handleRegister(db, bcrypt));
 app.get('/profile/:id', profile.handleProfile(db));
